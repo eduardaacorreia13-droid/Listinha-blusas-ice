@@ -17,6 +17,8 @@
   .pago { background:#1E3A8A; color:white; }
   .nao-pago { background:#3B82F6; color:white; }
   footer { text-align:center; background:#1E3A8A; color:white; padding:10px; margin-top:20px; }
+  .adicionar { margin-top:10px; display:flex; gap:5px; }
+  input { padding:4px; border-radius:6px; border:1px solid #ccc; }
 </style>
 </head>
 <body>
@@ -24,10 +26,16 @@
   <h1>Tribo ICE — Controle de Blusas</h1>
 </header>
 <main id="app">
+  <div class="adicionar">
+    <input type="text" id="nomeInput" placeholder="Nome da pessoa">
+    <input type="text" id="gcInput" placeholder="Grupo (GC)">
+    <button onclick="adicionarRegistro()">Adicionar</button>
+  </div>
 </main>
-<footer>Feito para a Tribo ICE</footer>
+<footer>Feito com 💙 para a Tribo ICE</footer>
 
 <script>
+// ======= Aqui você atualiza, modifica ou adiciona pessoas =======
 const registros = [
   { nome: "Júlia", gc: "Seguras", pago: true },
   { nome: "Layla M", gc: "Seguras", pago: true },
@@ -39,26 +47,33 @@ const registros = [
   { nome: "Joaquim", gc: "Alcançados", pago: true },
   { nome: "Guilherme", gc: "Alcançados", pago: true },
   { nome: "Yuri", gc: "Alcançados", pago: true },
-  { nome: "Lari Bea", gc: "Geral", pago: true },
   { nome: "Taila", gc: "Geral", pago: false },
   { nome: "Ana Heloísa (irmã do Hélio)", gc: "Geral", pago: true },
   { nome: "Ana vitória school", gc: "Geral", pago: true },
   { nome: "Emily school", gc: "Geral", pago: true }
 ];
 
+// ======= Funções =======
 function render() {
   const app = document.getElementById('app');
-  app.innerHTML = '';
+  // Limpa tudo, exceto a barra de adicionar
+  app.querySelectorAll('.gc-card').forEach(c=>c.remove());
+
+  // Organiza os grupos, garantindo "Geral" por último
   const grupos = {};
-  registros.forEach(r=>{ if(!grupos[r.gc]) grupos[r.gc]=[]; grupos[r.gc].push(r); });
-  Object.keys(grupos).sort().forEach(gc=>{
+  registros.forEach(r => { if(!grupos[r.gc]) grupos[r.gc]=[]; grupos[r.gc].push(r); });
+  const keys = Object.keys(grupos).filter(k=>k!=="Geral").sort();
+  if(grupos["Geral"]) keys.push("Geral");
+
+  keys.forEach(gc=>{
     const lista = grupos[gc];
     const pagos = lista.filter(r=>r.pago).length;
     const card = document.createElement('div'); card.className='gc-card';
     const title = document.createElement('div'); title.className='gc-title';
     title.innerHTML=`${gc} <span>${pagos}/${lista.length} pagos</span>`;
     card.appendChild(title);
-    lista.forEach((r,i)=>{
+
+    lista.forEach(r=>{
       const div = document.createElement('div'); div.className='registro';
       const nome = document.createElement('div'); nome.textContent=r.nome;
       const btn = document.createElement('button'); 
@@ -71,6 +86,18 @@ function render() {
   });
 }
 
+function adicionarRegistro() {
+  const nomeInput = document.getElementById('nomeInput');
+  const gcInput = document.getElementById('gcInput');
+  const nome = nomeInput.value.trim();
+  const gc = gcInput.value.trim();
+  if(!nome || !gc) { alert('Preencha os dois campos!'); return; }
+  registros.push({ nome, gc, pago:false });
+  nomeInput.value=''; gcInput.value='';
+  render();
+}
+
+// ======= Inicial =======
 render();
 </script>
 </body>
