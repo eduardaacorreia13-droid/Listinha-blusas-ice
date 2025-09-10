@@ -4,21 +4,23 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Tribo ICE - Controle de Blusas</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-  body { font-family: Arial, sans-serif; background: #f3f4f6; margin:0; padding:0;}
+  body { font-family: 'Roboto', sans-serif; background: #f3f4f6; margin:0; padding:0;}
   header { background: #1E3A8A; color: white; padding: 20px; text-align:center;}
   h1 { margin:0; font-size: 24px; }
   main { max-width: 800px; margin: 20px auto; padding: 0 10px; }
-  .gc-card { background:white; border:2px solid #3B82F6; border-radius:12px; padding:10px; margin-bottom:20px;}
-  .gc-title { font-weight:bold; color:#1E3A8A; display:flex; justify-content:space-between; align-items:center; }
+  .gc-card { background:white; border-radius:12px; padding:10px; margin-bottom:20px; box-shadow:0 3px 6px rgba(0,0,0,0.1);}
+  .gc-title { font-weight:bold; color:#1E3A8A; display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;}
   .registro { display:flex; justify-content:space-between; align-items:center; padding:5px 0; border-bottom:1px solid #e2e8f0; }
   .registro:last-child { border:none; }
   button { padding: 4px 10px; border:none; border-radius:6px; cursor:pointer; }
   .pago { background:#1E3A8A; color:white; }
   .nao-pago { background:#3B82F6; color:white; }
+  .excluir { background:#EF4444; color:white; margin-left:5px; }
   footer { text-align:center; background:#1E3A8A; color:white; padding:10px; margin-top:20px; }
-  .adicionar { margin-top:10px; display:flex; gap:5px; }
-  input { padding:4px; border-radius:6px; border:1px solid #ccc; }
+  .adicionar, .busca { margin-bottom:10px; display:flex; gap:5px; flex-wrap: wrap;}
+  input { padding:6px; border-radius:6px; border:1px solid #ccc; flex:1; min-width:120px;}
 </style>
 </head>
 <body>
@@ -31,12 +33,18 @@
     <input type="text" id="gcInput" placeholder="Grupo (GC)">
     <button onclick="adicionarRegistro()">Adicionar</button>
   </div>
+  <div class="busca">
+    <input type="text" id="buscaInput" placeholder="Buscar por nome" oninput="render()">
+  </div>
 </main>
 <footer>Feito com 💙 para a Tribo ICE</footer>
 
 <script>
-// ======= Aqui você atualiza, modifica ou adiciona pessoas =======
-const registros = [
+// ====== Configurações iniciais ======
+const STORAGE_KEY = "tribo-ice-registros-v3";
+
+// Lista inicial de pessoas
+let registros = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [
   { nome: "Júlia", gc: "Seguras", pago: true },
   { nome: "Layla M", gc: "Seguras", pago: true },
   { nome: "Loretta P", gc: "Rubi", pago: true },
@@ -53,34 +61,55 @@ const registros = [
   { nome: "Emily school", gc: "Geral", pago: true }
 ];
 
-// ======= Funções =======
+// ====== Funções ======
+function salvar() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(registros));
+}
+
 function render() {
   const app = document.getElementById('app');
-  // Limpa tudo, exceto a barra de adicionar
+  // remove todos os cards existentes
   app.querySelectorAll('.gc-card').forEach(c=>c.remove());
 
-  // Organiza os grupos, garantindo "Geral" por último
+  const busca = document.getElementById('buscaInput').value.toLowerCase();
+  // organiza grupos, "Geral" por último
   const grupos = {};
-  registros.forEach(r => { if(!grupos[r.gc]) grupos[r.gc]=[]; grupos[r.gc].push(r); });
+  registros.forEach(r=>{
+    if(!grupos[r.gc]) grupos[r.gc]=[];
+    grupos[r.gc].push(r);
+  });
   const keys = Object.keys(grupos).filter(k=>k!=="Geral").sort();
   if(grupos["Geral"]) keys.push("Geral");
 
   keys.forEach(gc=>{
-    const lista = grupos[gc];
+    const lista = grupos[gc].filter(r=>r.nome.toLowerCase().includes(busca));
     const pagos = lista.filter(r=>r.pago).length;
     const card = document.createElement('div'); card.className='gc-card';
     const title = document.createElement('div'); title.className='gc-title';
-    title.innerHTML=`${gc} <span>${pagos}/${lista.length} pagos</span>`;
+    title.innerHTML = `${gc} <span>${pagos}/${lista.length} pagos</span>`;
     card.appendChild(title);
 
-    lista.forEach(r=>{
+    lista.forEach((r,index)=>{
       const div = document.createElement('div'); div.className='registro';
-      const nome = document.createElement('div'); nome.textContent=r.nome;
-      const btn = document.createElement('button'); 
-      btn.textContent = r.pago ? 'Pago' : 'Não pago';
-      btn.className = r.pago ? 'pago' : 'nao-pago';
-      btn.onclick = ()=>{ r.pago=!r.pago; render(); };
-      div.appendChild(nome); div.appendChild(btn); card.appendChild(div);
+      const nomeDiv = document.createElement('div'); nomeDiv.textContent = r.nome;
+      const btnPago = document.createElement('button');
+      btnPago.textContent = r.pago ? 'Pago' : 'Não pago';
+      btnPago.className = r.pago ? 'pago' : 'nao-pago';
+      btnPago.onclick = ()=>{ r.pago=!r.pago; salvar(); render(); };
+
+      const btnExcluir = document.createElement('button');
+      btnExcluir.textContent = 'Excluir';
+      btnExcluir.className = 'excluir';
+      btnExcluir.onclick = ()=>{
+        if(confirm(`Deseja remover ${r.nome}?`)) {
+          registros.splice(registros.indexOf(r),1);
+          salvar();
+          render();
+        }
+      };
+
+      div.appendChild(nomeDiv); div.appendChild(btnPago); div.appendChild(btnExcluir);
+      card.appendChild(div);
     });
     app.appendChild(card);
   });
@@ -91,13 +120,14 @@ function adicionarRegistro() {
   const gcInput = document.getElementById('gcInput');
   const nome = nomeInput.value.trim();
   const gc = gcInput.value.trim();
-  if(!nome || !gc) { alert('Preencha os dois campos!'); return; }
+  if(!nome || !gc) { alert("Preencha os dois campos!"); return; }
   registros.push({ nome, gc, pago:false });
   nomeInput.value=''; gcInput.value='';
+  salvar();
   render();
 }
 
-// ======= Inicial =======
+// ====== Inicial ======
 render();
 </script>
 </body>
