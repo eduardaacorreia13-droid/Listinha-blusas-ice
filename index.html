@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tribo ICE - Controle de Blusas</title>
+<style>
+  body { font-family: Arial, sans-serif; background: #f3f4f6; margin:0; padding:0;}
+  header { background: #1E3A8A; color: white; padding: 20px; text-align:center;}
+  h1 { margin:0; font-size: 24px; }
+  main { max-width: 800px; margin: 20px auto; padding: 0 10px; }
+  .gc-card { background:white; border:2px solid #3B82F6; border-radius:12px; padding:10px; margin-bottom:20px;}
+  .gc-title { font-weight:bold; color:#1E3A8A; display:flex; justify-content:space-between; align-items:center; }
+  .registro { display:flex; justify-content:space-between; align-items:center; padding:5px 0; border-bottom:1px solid #e2e8f0; }
+  .registro:last-child { border:none; }
+  button { padding: 4px 10px; border:none; border-radius:6px; cursor:pointer; }
+  .pago { background:#1E3A8A; color:white; }
+  .nao-pago { background:#3B82F6; color:white; }
+  footer { text-align:center; background:#1E3A8A; color:white; padding:10px; margin-top:20px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Tribo ICE — Controle de Blusas</h1>
+</header>
+<main id="app">
+</main>
+<footer>Feito para a Tribo ICE</footer>
+
+<script>
+const registros = [
+  { nome: "Júlia", gc: "Seguras", pago: true },
+  { nome: "Layla M", gc: "Seguras", pago: true },
+  { nome: "Loretta P", gc: "Rubi", pago: true },
+  { nome: "Maria Cecília", gc: "Rubi", pago: true },
+  { nome: "Anna", gc: "Rubi", pago: true },
+  { nome: "Isaak", gc: "Destemidos", pago: true },
+  { nome: "Matheus", gc: "Destemidos", pago: true },
+  { nome: "Joaquim", gc: "Alcançados", pago: true },
+  { nome: "Guilherme", gc: "Alcançados", pago: true },
+  { nome: "Yuri", gc: "Alcançados", pago: true },
+  { nome: "Lari Bea", gc: "Geral", pago: true },
+  { nome: "Taila", gc: "Geral", pago: false },
+  { nome: "Ana Heloísa (irmã do Hélio)", gc: "Geral", pago: true },
+  { nome: "Ana vitória school", gc: "Geral", pago: true },
+  { nome: "Emily school", gc: "Geral", pago: true }
+];
+
+function render() {
+  const app = document.getElementById('app');
+  app.innerHTML = '';
+  const grupos = {};
+  registros.forEach(r=>{ if(!grupos[r.gc]) grupos[r.gc]=[]; grupos[r.gc].push(r); });
+  Object.keys(grupos).sort().forEach(gc=>{
+    const lista = grupos[gc];
+    const pagos = lista.filter(r=>r.pago).length;
+    const card = document.createElement('div'); card.className='gc-card';
+    const title = document.createElement('div'); title.className='gc-title';
+    title.innerHTML=`${gc} <span>${pagos}/${lista.length} pagos</span>`;
+    card.appendChild(title);
+    lista.forEach((r,i)=>{
+      const div = document.createElement('div'); div.className='registro';
+      const nome = document.createElement('div'); nome.textContent=r.nome;
+      const btn = document.createElement('button'); 
+      btn.textContent = r.pago ? 'Pago' : 'Não pago';
+      btn.className = r.pago ? 'pago' : 'nao-pago';
+      btn.onclick = ()=>{ r.pago=!r.pago; render(); };
+      div.appendChild(nome); div.appendChild(btn); card.appendChild(div);
+    });
+    app.appendChild(card);
+  });
+}
+
+render();
+</script>
+</body>
+</html>
